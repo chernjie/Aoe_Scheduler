@@ -25,6 +25,7 @@ class Aoe_Scheduler_Model_Observer extends Mage_Cron_Model_Observer {
 		$scheduleLifetime = Mage::getStoreConfig(self::XML_PATH_SCHEDULE_LIFETIME) * 60;
 		$now = time();
 		$jobsRoot = Mage::getConfig()->getNode('crontab/jobs');
+		$defaultJobsRoot = Mage::getConfig()->getNode('default/crontab/jobs');
 
 		foreach ($schedules->getIterator() as $schedule) { /* @var $schedule Aoe_Scheduler_Model_Schedule */
 			try {
@@ -33,7 +34,10 @@ class Aoe_Scheduler_Model_Observer extends Mage_Cron_Model_Observer {
 
 				$jobConfig = $jobsRoot->{$schedule->getJobCode()};
 				if (!$jobConfig || !$jobConfig->run) {
-					Mage::throwException(Mage::helper('cron')->__('No valid configuration found.'));
+					$jobConfig = $defaultJobsRoot->{$schedule->getJobCode()};
+					if (!$jobConfig || !$jobConfig->run) {
+						Mage::throwException(Mage::helper('cron')->__('No valid configuration found.'));
+					}
 				}
 
 				$runConfig = $jobConfig->run;
